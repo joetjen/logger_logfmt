@@ -96,18 +96,40 @@ config :logger, :logfmt,
 
 ### Timestamp Formats
 
-Configure the timestamp format:
+Configure the timestamp format for log entries:
 
 ```elixir
-# Elixir format (default): "2024-01-15 10:30:45.123"
+# Elixir format: "2024-01-15 10:30:45.123"
 config :logger, :logfmt, timestamp_format: :elixir
 
-# ISO8601 format: "2024-01-15T10:30:45.123"
+# ISO8601 format (default): "2024-01-15T10:30:45.123"
 config :logger, :logfmt, timestamp_format: :iso8601
 
 # Unix epoch time: 1705318245
 config :logger, :logfmt, timestamp_format: :epoch_time
 ```
+
+### Metadata Timestamp Format
+
+Configure how DateTime/NaiveDateTime values in metadata are formatted:
+
+```elixir
+# Unix epoch time (default): created_at=1705318245
+config :logger, :logfmt, metadata_timestamp_format: :epoch_time
+
+# ISO8601 format: created_at="2024-01-15T10:30:45.123456Z"
+config :logger, :logfmt, metadata_timestamp_format: :iso8601
+
+# Elixir format: created_at="2024-01-15 10:30:45.123456"
+config :logger, :logfmt, metadata_timestamp_format: :elixir
+```
+
+When using `:epoch_time`, the time unit is auto-detected from the key suffix:
+
+- `*_ms` → milliseconds
+- `*_us` → microseconds
+- `*_ns` → nanoseconds
+- No suffix → seconds
 
 ### Custom Field Keys
 
@@ -155,6 +177,20 @@ Logger.warn("High memory usage", memory_mb: 512.5, threshold_mb: 500)
 user = %{name: "John", address: %{city: "Berlin", zip: "10115"}}
 Logger.info("User registered", user: user)
 # Output: timestamp="2024-01-15 10:30:45.123" level=info message="User registered" user.name=John user.address.city=Berlin user.address.zip=10115
+```
+
+### DateTime and NaiveDateTime Values
+
+DateTime and NaiveDateTime values in metadata are automatically formatted based on the `metadata_timestamp_format` option (defaults to `:epoch_time`):
+
+```elixir
+Logger.info("Event occurred", created_at: DateTime.utc_now())
+# Output: timestamp="..." level=info message="Event occurred" created_at=1701619200
+
+# Time unit is auto-detected from key suffix:
+Logger.info("Event", created_at_ms: DateTime.utc_now())  # milliseconds
+Logger.info("Event", created_at_us: DateTime.utc_now())  # microseconds
+Logger.info("Event", created_at_ns: DateTime.utc_now())  # nanoseconds
 ```
 
 ### Special Characters Handling
@@ -252,4 +288,4 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-MIT License - See LICENSE file for details.
+Apache License 2.0 - See LICENSE file for details.

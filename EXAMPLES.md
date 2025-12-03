@@ -273,6 +273,39 @@ defmodule MyAppWeb.DashboardLive do
 end
 ```
 
+### DateTime and NaiveDateTime Values
+
+```elixir
+defmodule DateTimeExample do
+  require Logger
+
+  def run do
+    now = DateTime.utc_now()
+    naive_now = NaiveDateTime.utc_now()
+
+    # DateTime values are formatted based on metadata_timestamp_format
+    # Default is :epoch_time (Unix timestamp in seconds)
+    Logger.info("Event occurred", created_at: now)
+    # Output: ... created_at=1701619200
+
+    # Time unit auto-detected from key suffix
+    Logger.info("Timing data",
+      started_at: now,           # seconds
+      started_at_ms: now,        # milliseconds
+      started_at_us: now,        # microseconds
+      started_at_ns: now         # nanoseconds
+    )
+    # Output: ... started_at=1701619200 started_at_ms=1701619200123 started_at_us=1701619200123456 started_at_ns=1701619200123456000
+
+    # NaiveDateTime works the same way
+    Logger.info("Naive timestamp", timestamp: naive_now)
+    # Output: ... timestamp=1701619200
+  end
+end
+
+DateTimeExample.run()
+```
+
 ## Real-World Patterns
 
 ### Service Layer Logging

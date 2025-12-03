@@ -189,7 +189,7 @@ config :logger, :logfmt,
 config :logger, :logfmt,
   timestamp_format: :iso8601
 
-# Output: timestamp="2024-01-15T10:30:45.123Z"
+# Output: timestamp="2024-01-15T10:30:45.123"
 ```
 
 ### Unix Epoch Format
@@ -202,6 +202,38 @@ config :logger, :logfmt,
 ```
 
 ## Advanced Usage
+
+### DateTime and NaiveDateTime Values
+
+DateTime and NaiveDateTime values in metadata are handled specially with the `metadata_timestamp_format` option:
+
+```elixir
+config :logger, :logfmt,
+  metadata_timestamp_format: :epoch_time  # default
+
+Logger.info("Event", timestamp: DateTime.utc_now())
+# Output: ... timestamp=1705318245
+```
+
+The time unit for epoch timestamps is auto-detected from the key suffix:
+
+```elixir
+# Seconds (default)
+Logger.info("Event", created_at: DateTime.utc_now())
+# Output: ... created_at=1705318245
+
+# Milliseconds
+Logger.info("Event", created_at_ms: DateTime.utc_now())
+# Output: ... created_at_ms=1705318245123
+
+# Microseconds
+Logger.info("Event", created_at_us: DateTime.utc_now())
+# Output: ... created_at_us=1705318245123456
+
+# Nanoseconds
+Logger.info("Event", created_at_ns: DateTime.utc_now())
+# Output: ... created_at_ns=1705318245123456000
+```
 
 ### Log Level Formatting
 

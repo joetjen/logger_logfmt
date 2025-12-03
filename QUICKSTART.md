@@ -78,8 +78,8 @@ config :logger, :logfmt,
 
 Formats:
 
-- `:elixir` - `"2024-01-15 10:30:45.123"` (default)
-- `:iso8601` - `"2024-01-15T10:30:45.123"`
+- `:elixir` - `"2024-01-15 10:30:45.123"`
+- `:iso8601` - `"2024-01-15T10:30:45.123"` (default)
 - `:epoch_time` - Unix timestamp in seconds
 
 ## Features
