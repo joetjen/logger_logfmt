@@ -2,7 +2,7 @@ defmodule LoggerLogfmt.MixProject do
   use Mix.Project
 
   @version "1.0.1"
-  @source_url "https://github.com/yourorg/logger_logfmt"
+  @source_url "https://github.com/joetjen/logger_logfmt"
 
   def project do
     [
