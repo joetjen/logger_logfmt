@@ -2,11 +2,15 @@
 
 A logfmt formatter for Elixir's Logger that outputs structured logs in the logfmt format.
 
+[![Hex.pm](https://img.shields.io/hexpm/v/eel.svg)](https://hex.pm/packages/logger_logfmt)
+[![Documentation](https://img.shields.io/badge/docs-hexpm-blue.svg)](https://hexdocs.pm/logger_logfmt)
+
 ## Overview
 
 LoggerLogfmt provides a simple, text-based structured logging format where each log line consists of key-value pairs. The format is both human-readable and machine-parseable, making it ideal for log aggregation and analysis.
 
 **Example output:**
+
 ```
 timestamp="2024-01-15 10:30:45.123" level=info message="User logged in" user_id=42 request_id=abc123
 ```
@@ -67,6 +71,7 @@ The `:format` option accepts a list of atoms that determine which fields to incl
 | `:line` | Line number |
 
 **Example:**
+
 ```elixir
 config :logger, :logfmt,
   format: [:timestamp, :level, :message, :metadata]
