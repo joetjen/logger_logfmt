@@ -4,6 +4,7 @@ A logfmt formatter for Elixir's Logger that outputs structured logs in the logfm
 
 [![Hex.pm](https://img.shields.io/hexpm/v/eel.svg)](https://hex.pm/packages/logger_logfmt)
 [![Documentation](https://img.shields.io/badge/docs-hexpm-blue.svg)](https://hexdocs.pm/logger_logfmt)
+[![License](https://img.shields.io/hexpm/l/twitchy.svg)](LICENSE)
 
 ## Overview
 
