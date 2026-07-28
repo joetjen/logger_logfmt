@@ -2,11 +2,16 @@
 
 A logfmt formatter for Elixir's Logger that outputs structured logs in the logfmt format.
 
+[![Hex.pm](https://img.shields.io/hexpm/v/logger_logfmt.svg)](https://hex.pm/packages/logger_logfmt)
+[![Documentation](https://img.shields.io/badge/docs-hexpm-blue.svg)](https://hexdocs.pm/logger_logfmt)
+[![License](https://img.shields.io/hexpm/l/logger_logfmt.svg)](LICENSE)
+
 ## Overview
 
 LoggerLogfmt provides a simple, text-based structured logging format where each log line consists of key-value pairs. The format is both human-readable and machine-parseable, making it ideal for log aggregation and analysis.
 
 **Example output:**
+
 ```
 timestamp="2024-01-15 10:30:45.123" level=info message="User logged in" user_id=42 request_id=abc123
 ```
@@ -27,7 +32,7 @@ Add `logger_logfmt` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:logger_logfmt, "~> 0.1.0"}
+    {:logger_logfmt, "~> 1.0"}
   ]
 end
 ```
@@ -67,6 +72,7 @@ The `:format` option accepts a list of atoms that determine which fields to incl
 | `:line` | Line number |
 
 **Example:**
+
 ```elixir
 config :logger, :logfmt,
   format: [:timestamp, :level, :message, :metadata]
@@ -167,8 +173,8 @@ Logger.error("Database connection failed")
 Logger.info("User action", user_id: 42, action: "login", ip: "192.168.1.1")
 # Output: timestamp="2024-01-15 10:30:45.123" level=info message="User action" user_id=42 action=login ip=192.168.1.1
 
-Logger.warn("High memory usage", memory_mb: 512.5, threshold_mb: 500)
-# Output: timestamp="2024-01-15 10:30:45.123" level=warn message="High memory usage" memory_mb=512.5 threshold_mb=500
+Logger.warning("High memory usage", memory_mb: 512.5, threshold_mb: 500)
+# Output: timestamp="2024-01-15 10:30:45.123" level=warning message="High memory usage" memory_mb=512.5 threshold_mb=500
 ```
 
 ### Logging Nested Data
@@ -177,6 +183,26 @@ Logger.warn("High memory usage", memory_mb: 512.5, threshold_mb: 500)
 user = %{name: "John", address: %{city: "Berlin", zip: "10115"}}
 Logger.info("User registered", user: user)
 # Output: timestamp="2024-01-15 10:30:45.123" level=info message="User registered" user.name=John user.address.city=Berlin user.address.zip=10115
+```
+
+### Struct Values
+
+Structs that implement the `String.Chars` protocol are logged via `to_string/1`. Any other struct (and plain maps) are logged as nested dot-notation keys, the same as maps:
+
+```elixir
+defmodule Money do
+  defstruct [:amount, :currency]
+end
+
+defimpl String.Chars, for: Money do
+  def to_string(%{amount: amount, currency: currency}), do: "#{amount} #{currency}"
+end
+
+Logger.info("Payment received", total: %Money{amount: 99.99, currency: "USD"})
+# Output: ... total="99.99 USD"
+
+Logger.info("User registered", address: %{city: "Berlin", zip: "10115"})
+# Output: ... address.city=Berlin address.zip=10115
 ```
 
 ### DateTime and NaiveDateTime Values
@@ -272,7 +298,6 @@ Full API documentation is available at [HexDocs](https://hexdocs.pm/logger_logfm
 Run the test suite:
 
 ```bash
-cd libs/logger_logfmt
 mix test
 ```
 
@@ -284,8 +309,8 @@ mix test --cover
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions and the checklist to run before opening a Pull Request.
 
 ## License
 
-Apache License 2.0 - See LICENSE file for details.
+MIT License - See [LICENSE](LICENSE) for details.

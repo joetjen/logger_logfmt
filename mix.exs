@@ -1,8 +1,8 @@
 defmodule LoggerLogfmt.MixProject do
   use Mix.Project
 
-  @version "1.0.1"
-  @source_url "https://github.com/yourorg/logger_logfmt"
+  @version "2.0.0"
+  @source_url "https://github.com/joetjen/logger_logfmt"
 
   def project do
     [
@@ -10,6 +10,7 @@ defmodule LoggerLogfmt.MixProject do
       version: @version,
       elixir: "~> 1.18",
       start_permanent: Mix.env() == :prod,
+      consolidate_protocols: Mix.env() != :test,
       deps: deps(),
 
       # Docs
@@ -42,8 +43,8 @@ defmodule LoggerLogfmt.MixProject do
   defp docs do
     [
       main: "readme",
-      extras: ["README.md", "QUICKSTART.md", "USAGE_GUIDE.md", "EXAMPLES.md"],
-      source_ref: "v#{@version}",
+      extras: ["README.md", "QUICKSTART.md", "USAGE_GUIDE.md", "EXAMPLES.md", "CONTRIBUTING.md", "LICENSE"],
+      source_ref: @version,
       source_url: @source_url,
       formatters: ["html"]
     ]
@@ -52,7 +53,7 @@ defmodule LoggerLogfmt.MixProject do
   defp package do
     [
       name: "logger_logfmt",
-      licenses: ["Apache-2.0"],
+      licenses: ["MIT"],
       links: %{
         "GitHub" => @source_url
       }

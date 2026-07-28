@@ -200,5 +200,26 @@ defmodule Logger.Backends.LogfmtTest do
 
       assert output =~ ~r/message=/
     end
+
+    test "raises for an invalid :metadata option" do
+      timestamp = {{2024, 1, 15}, {10, 30, 45, 0}}
+
+      assert_raise RuntimeError, ~r/Invalid metadata format/, fn ->
+        Logfmt.format(:info, "Test", timestamp, [], metadata: "not_a_list_or_default")
+      end
+    end
+
+    test "raises for an unknown :mode option" do
+      timestamp = {{2024, 1, 15}, {10, 30, 45, 0}}
+
+      # `metadata` must be an explicit list here: with the default `:metadata: :default`,
+      # resolving the default whitelist/blacklist itself fails first on an unknown mode.
+      assert_raise RuntimeError, ~r/Unknown mode/, fn ->
+        Logfmt.format(:info, "Test", timestamp, [application: :my_app],
+          metadata: [:application],
+          mode: :unknown_mode
+        )
+      end
+    end
   end
 end

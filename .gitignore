@@ -17,9 +17,10 @@ erl_crash.dump
 *.ez
 
 # Ignore package tarball (built via "mix hex.build").
-logger_logfmt-*.tar
+*-*.tar
 
 # Temporary files, for example, from tests.
 /tmp/
 
 mix.lock
+.DS_Store

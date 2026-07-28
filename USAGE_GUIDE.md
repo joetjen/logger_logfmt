@@ -16,7 +16,7 @@ A comprehensive guide to using LoggerLogfmt for structured logging in Elixir app
 
 ```elixir
 # Add to mix.exs
-{:logger_logfmt, "~> 0.1.0"}
+{:logger_logfmt, "~> 1.0"}
 
 # Configure in config/config.exs
 config :logger, :console,
@@ -202,6 +202,35 @@ config :logger, :logfmt,
 ```
 
 ## Advanced Usage
+
+### Struct Values
+
+Struct values are encoded in one of two ways, depending on whether the struct implements the `String.Chars` protocol:
+
+- If it does, the value is encoded via `to_string/1`.
+- Otherwise, it's encoded like a map: as nested dot-notation keys, with `__struct__` stripped.
+
+```elixir
+defmodule MyApp.Money do
+  defstruct [:amount, :currency]
+end
+
+defimpl String.Chars, for: MyApp.Money do
+  def to_string(%{amount: amount, currency: currency}), do: "#{amount} #{currency}"
+end
+
+Logger.info("Charged card", total: %MyApp.Money{amount: 12.5, currency: "EUR"})
+# Output: ... total="12.5 EUR"
+
+defmodule MyApp.Address do
+  defstruct [:city, :zip]
+end
+
+Logger.info("Shipping to", address: %MyApp.Address{city: "Berlin", zip: "10115"})
+# Output: ... address.city=Berlin address.zip=10115
+```
+
+`DateTime` and `NaiveDateTime` are special-cased ahead of this rule and always use the timestamp formatting described below, regardless of whether they implement `String.Chars`.
 
 ### DateTime and NaiveDateTime Values
 

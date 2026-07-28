@@ -40,6 +40,9 @@ defmodule Logger.Backends.Logfmt.Quoter do
 
   @quote ?"
 
+  @typedoc "The quoting strategy required for a value, as determined by `infer_quote/1`."
+  @type quote_strategy :: :none | :quoting | :quoting_and_escaping
+
   @doc """
   Quotes a value if necessary based on its content.
 
@@ -62,6 +65,7 @@ defmodule Logger.Backends.Logfmt.Quoter do
       [34, "has space", 34]
 
   """
+  @spec maybe_quote(String.t()) :: String.t() | iolist()
   def maybe_quote(val) do
     case infer_quote(val) do
       :none -> val
@@ -95,8 +99,14 @@ defmodule Logger.Backends.Logfmt.Quoter do
       :quoting_and_escaping
 
   """
+  @spec infer_quote(String.t()) :: quote_strategy()
   def infer_quote(val), do: infer_quote(val, :none)
 
+  # Scans the binary byte by byte, tracking the strictest quoting requirement seen so
+  # far. A double quote, backslash, or control character short-circuits immediately
+  # since nothing can outrank `:quoting_and_escaping`; a space or `=` only upgrades
+  # from `:none` and keeps scanning in case a later byte demands escaping too.
+  @spec infer_quote(binary(), quote_strategy()) :: quote_strategy()
   defp infer_quote(<<>>, acc), do: acc
   defp infer_quote(<<" ", rest::binary>>, _acc), do: infer_quote(rest, :quoting)
   defp infer_quote(<<"\"", _rest::binary>>, _acc), do: :quoting_and_escaping
@@ -126,42 +136,24 @@ defmodule Logger.Backends.Logfmt.Quoter do
       "has\\\\\\"quote"
 
   """
+  @spec escape(String.t()) :: String.t()
   def escape(val), do: escape(val, "")
 
+  # Recursively rebuilds the binary, replacing each special character with its escape
+  # sequence. Tab/newline/carriage-return/quote/backslash get their short mnemonic
+  # escapes; the remaining control characters (0x00-0x1F, 0x7F) get a `\uXXXX` escape.
+  @spec escape(binary(), binary()) :: binary()
   defp escape(<<>>, acc), do: acc
-  defp escape(<<0x0, rest::binary>>, acc), do: escape(rest, <<acc::binary, "\\u0000">>)
-  defp escape(<<0x1, rest::binary>>, acc), do: escape(rest, <<acc::binary, "\\u0001">>)
-  defp escape(<<0x2, rest::binary>>, acc), do: escape(rest, <<acc::binary, "\\u0002">>)
-  defp escape(<<0x3, rest::binary>>, acc), do: escape(rest, <<acc::binary, "\\u0003">>)
-  defp escape(<<0x4, rest::binary>>, acc), do: escape(rest, <<acc::binary, "\\u0004">>)
-  defp escape(<<0x5, rest::binary>>, acc), do: escape(rest, <<acc::binary, "\\u0005">>)
-  defp escape(<<0x6, rest::binary>>, acc), do: escape(rest, <<acc::binary, "\\u0006">>)
-  defp escape(<<0x7, rest::binary>>, acc), do: escape(rest, <<acc::binary, "\\u0007">>)
-  defp escape(<<0x8, rest::binary>>, acc), do: escape(rest, <<acc::binary, "\\u0008">>)
   defp escape(<<"\t", rest::binary>>, acc), do: escape(rest, <<acc::binary, "\\t">>)
   defp escape(<<"\n", rest::binary>>, acc), do: escape(rest, <<acc::binary, "\\n">>)
-  defp escape(<<0xB, rest::binary>>, acc), do: escape(rest, <<acc::binary, "\\u000b">>)
-  defp escape(<<0xC, rest::binary>>, acc), do: escape(rest, <<acc::binary, "\\u000c">>)
   defp escape(<<"\r", rest::binary>>, acc), do: escape(rest, <<acc::binary, "\\r">>)
-  defp escape(<<0xE, rest::binary>>, acc), do: escape(rest, <<acc::binary, "\\u000e">>)
-  defp escape(<<0xF, rest::binary>>, acc), do: escape(rest, <<acc::binary, "\\u000f">>)
-  defp escape(<<0x10, rest::binary>>, acc), do: escape(rest, <<acc::binary, "\\u0010">>)
-  defp escape(<<0x11, rest::binary>>, acc), do: escape(rest, <<acc::binary, "\\u0011">>)
-  defp escape(<<0x12, rest::binary>>, acc), do: escape(rest, <<acc::binary, "\\u0012">>)
-  defp escape(<<0x13, rest::binary>>, acc), do: escape(rest, <<acc::binary, "\\u0013">>)
-  defp escape(<<0x14, rest::binary>>, acc), do: escape(rest, <<acc::binary, "\\u0014">>)
-  defp escape(<<0x15, rest::binary>>, acc), do: escape(rest, <<acc::binary, "\\u0015">>)
-  defp escape(<<0x16, rest::binary>>, acc), do: escape(rest, <<acc::binary, "\\u0016">>)
-  defp escape(<<0x17, rest::binary>>, acc), do: escape(rest, <<acc::binary, "\\u0017">>)
-  defp escape(<<0x18, rest::binary>>, acc), do: escape(rest, <<acc::binary, "\\u0018">>)
-  defp escape(<<0x19, rest::binary>>, acc), do: escape(rest, <<acc::binary, "\\u0019">>)
-  defp escape(<<0x1A, rest::binary>>, acc), do: escape(rest, <<acc::binary, "\\u001a">>)
-  defp escape(<<0x1B, rest::binary>>, acc), do: escape(rest, <<acc::binary, "\\u001b">>)
-  defp escape(<<0x1C, rest::binary>>, acc), do: escape(rest, <<acc::binary, "\\u001c">>)
-  defp escape(<<0x1D, rest::binary>>, acc), do: escape(rest, <<acc::binary, "\\u001d">>)
-  defp escape(<<0x1E, rest::binary>>, acc), do: escape(rest, <<acc::binary, "\\u001e">>)
-  defp escape(<<0x1F, rest::binary>>, acc), do: escape(rest, <<acc::binary, "\\u001f">>)
   defp escape(<<"\"", rest::binary>>, acc), do: escape(rest, <<acc::binary, "\\\"">>)
   defp escape(<<"\\", rest::binary>>, acc), do: escape(rest, <<acc::binary, "\\\\">>)
+
+  defp escape(<<c, rest::binary>>, acc) when c <= 0x1F or c == 0x7F do
+    hex = c |> Integer.to_string(16) |> String.downcase() |> String.pad_leading(4, "0")
+    escape(rest, <<acc::binary, "\\u", hex::binary>>)
+  end
+
   defp escape(<<c, rest::binary>>, acc), do: escape(rest, <<acc::binary, c>>)
 end

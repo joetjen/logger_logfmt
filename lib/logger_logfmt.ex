@@ -18,6 +18,7 @@ defmodule LoggerLogfmt do
   - **Multiple Timestamp Formats**: Support for Elixir, ISO8601, and Unix epoch formats
   - **Automatic Quoting**: Values with special characters are properly quoted and escaped
   - **Nested Maps**: Supports nested structures with dot notation
+  - **Struct Support**: Structs implementing `String.Chars` are stringified; others are logged as nested maps
   - **Zero Dependencies**: Pure Elixir implementation
 
   ## Installation
@@ -26,7 +27,7 @@ defmodule LoggerLogfmt do
 
       def deps do
         [
-          {:logger_logfmt, "~> 0.1.0"}
+          {:logger_logfmt, "~> 1.0"}
         ]
       end
 

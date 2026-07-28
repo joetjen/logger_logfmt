@@ -68,16 +68,40 @@ defmodule Logger.Backends.Logfmt do
   @default_blacklist [:gl, :mfa, :__sentry__, :logger_pubsub_backend, :ansi_color]
   @default_mode :whitelist
 
+  @typedoc "The timestamp tuple Elixir's `:logger` passes to a formatter's `format/4` callback."
+  @type timestamp :: {{non_neg_integer(), 1..12, 1..31}, {0..23, 0..59, 0..59, 0..999}}
+
+  @typedoc "One of the atoms accepted in the `:format` option, selecting a field to render."
+  @type format_field :: :timestamp | :level | :message | :domain | :node | :pid | :metadata | :file | :line
+
+  @typedoc "Metadata filtering mode: `:whitelist` includes only the listed keys, `:blacklist` excludes them."
+  @type mode :: :whitelist | :blacklist
+
   @doc """
   Formats a log message in logfmt format.
 
+  This is the function configured as `{Logger.Backends.Logfmt, :format}` in
+  `config :logger, :console, format: ...` - Elixir's `:logger` application calls it
+  once per log event with that event's level, message, timestamp, and metadata.
+
   ## Parameters
 
-  - `level` - The log level (`:debug`, `:info`, `:warn`, `:error`)
+  - `level` - The log level (`:debug`, `:info`, `:warning`, `:error`, etc. - see `t:Logger.level/0`)
   - `message` - The log message
   - `timestamp` - The timestamp tuple `{{year, month, day}, {hour, minute, second, millisecond}}`
   - `metadata` - A keyword list of metadata
-  - `opts` - Optional keyword list of formatting options
+  - `opts` - Optional keyword list of formatting options (merged over `config :logger, :logfmt`);
+    see `t:format_field/0` and `t:mode/0` for the atoms accepted below
+
+    - `:format` - list of `t:format_field/0` fields to include, in order (default: all fields)
+    - `:metadata` - `:default` or an explicit list of metadata keys to whitelist/blacklist
+    - `:mode` - `t:mode/0`, `:whitelist` (default) or `:blacklist`
+    - `:delimiter` - key-value delimiter character (default: `?=`)
+    - `:timestamp_format` - `:elixir`, `:iso8601` (default), or `:epoch_time`
+    - `:metadata_timestamp_format` - same formats, applied to `DateTime`/`NaiveDateTime`
+      metadata values (default: `:epoch_time`)
+    - `:timestamp_key`, `:level_key`, `:message_key`, `:domain_key`, `:node_key`, `:pid_key`,
+      `:file_key`, `:line_key` - rename the corresponding output key
 
   ## Returns
 
@@ -93,6 +117,7 @@ defmodule Logger.Backends.Logfmt do
       true
 
   """
+  @spec format(Logger.level(), Logger.message(), timestamp(), keyword(), keyword()) :: iodata()
   def format(level, message, timestamp, metadata, opts \\ []) do
     opts =
       :logger
@@ -108,6 +133,11 @@ defmodule Logger.Backends.Logfmt do
     |> add_newline()
   end
 
+  # Renders a single `:format` field to its logfmt key-value string (or, for
+  # `:metadata`, a list of them). Dispatches on the field atom; unmatched atoms
+  # aren't handled here and would raise `FunctionClauseError` from `format/5`.
+  @spec encode(format_field(), Logger.level(), Logger.message(), timestamp(), keyword(), keyword()) ::
+          iodata()
   defp encode(:timestamp, _level, _message, timestamp, _metadata, opts) do
     key = Keyword.get(opts, :timestamp_key, @default_timestamp_key)
     Encoder.encode(key, timestamp, opts)
@@ -169,11 +199,19 @@ defmodule Logger.Backends.Logfmt do
     Encoder.encode(key, val, opts)
   end
 
+  # Resolves the `:metadata` option to a concrete list of keys: `:default` picks the
+  # built-in whitelist or blacklist depending on `mode`, an explicit list passes
+  # through unchanged, and anything else is a configuration error.
+  @spec resolve_metadata_keys(:default | [atom()], atom()) :: [atom()]
   defp resolve_metadata_keys(:default, :whitelist), do: @default_whitelist
   defp resolve_metadata_keys(:default, :blacklist), do: @default_blacklist
   defp resolve_metadata_keys(keys, _mode) when is_list(keys), do: keys
   defp resolve_metadata_keys(keys, _mode), do: raise("Invalid metadata format: #{inspect(keys)}")
 
+  # Applies the resolved `keys` to the metadata keyword list according to `mode`:
+  # `:whitelist` keeps only entries whose key is in `keys` (preserving `keys`' order),
+  # `:blacklist` keeps everything except entries whose key is in `keys`.
+  @spec filter_metadata(keyword(), [atom()], atom()) :: keyword()
   defp filter_metadata(metadata, keys, :whitelist) do
     Enum.reduce(keys, [], fn key, acc ->
       if Keyword.has_key?(metadata, key) do
@@ -194,7 +232,8 @@ defmodule Logger.Backends.Logfmt do
     raise "Unknown mode #{mode}"
   end
 
+  @spec add_newline(iodata()) :: iodata()
   defp add_newline(log) do
-    [log | "\n"]
+    [log, "\n"]
   end
 end
