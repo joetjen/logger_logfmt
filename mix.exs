@@ -1,7 +1,7 @@
 defmodule LoggerLogfmt.MixProject do
   use Mix.Project
 
-  @version "1.0.1"
+  @version "2.0.0"
   @source_url "https://github.com/joetjen/logger_logfmt"
 
   def project do
@@ -44,7 +44,7 @@ defmodule LoggerLogfmt.MixProject do
     [
       main: "readme",
       extras: ["README.md", "QUICKSTART.md", "USAGE_GUIDE.md", "EXAMPLES.md", "CONTRIBUTING.md", "LICENSE"],
-      source_ref: "v#{@version}",
+      source_ref: @version,
       source_url: @source_url,
       formatters: ["html"]
     ]
