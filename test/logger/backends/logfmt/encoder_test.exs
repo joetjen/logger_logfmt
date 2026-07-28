@@ -1,7 +1,21 @@
+defmodule Logger.Backends.Logfmt.EncoderTest.Stringable do
+  defstruct [:value]
+end
+
+defimpl String.Chars, for: Logger.Backends.Logfmt.EncoderTest.Stringable do
+  def to_string(%{value: value}), do: "stringable:#{value}"
+end
+
+defmodule Logger.Backends.Logfmt.EncoderTest.PlainStruct do
+  defstruct name: "test", value: 42
+end
+
 defmodule Logger.Backends.Logfmt.EncoderTest do
   use ExUnit.Case, async: true
 
   alias Logger.Backends.Logfmt.Encoder
+  alias Logger.Backends.Logfmt.EncoderTest.PlainStruct
+  alias Logger.Backends.Logfmt.EncoderTest.Stringable
 
   doctest Encoder
 
@@ -90,6 +104,20 @@ defmodule Logger.Backends.Logfmt.EncoderTest do
       assert result =~ "data.value=42"
     end
 
+    test "encodes a struct implementing String.Chars using to_string/1" do
+      result = Encoder.encode("thing", %Stringable{value: "abc"})
+
+      assert result == "thing=stringable:abc"
+    end
+
+    test "encodes a struct without a String.Chars implementation as a map" do
+      result = Encoder.encode("data", %PlainStruct{})
+
+      refute result =~ "__struct__"
+      assert result =~ "data.name=test"
+      assert result =~ "data.value=42"
+    end
+
     test "uses custom delimiter" do
       result = Encoder.encode("key", "value", delimiter: ?:)
       assert result == "key:value"
@@ -127,9 +155,16 @@ defmodule Logger.Backends.Logfmt.EncoderTest do
       assert result =~ "pid="
     end
 
-    test "handles lists using inspect" do
-      result = Encoder.encode("items", [1, 2, 3])
+    test "encodes charlists using to_string/1" do
+      result = Encoder.encode("items", ~c"abc")
+      assert result == "items=abc"
+    end
+
+    test "falls back to inspect for lists that are not valid chardata" do
+      result = Encoder.encode("items", [1, :a, %{b: 2}])
       assert result =~ "items="
+      assert result =~ "1"
+      assert result =~ ":a"
     end
 
     test "handles tuples using inspect" do

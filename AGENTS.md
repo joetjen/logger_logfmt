@@ -16,6 +16,8 @@ LoggerLogfmt is an Elixir library that provides a logfmt formatter for Elixir's 
 - `QUICKSTART.md` - Quick start (always keep up to date)
 - `USAGE_GUIDE.md` - Detailed usage documentation (always keep up to date)
 - `EXAMPLES.md` - Code examples (always keep up to date)
+- `CONTRIBUTING.md` - Contributor setup and PR checklist
+- `CHANGELOG.md` - Keep a Changelog-formatted release history (update on every user-visible change)
 
 ## Library Overview
 
@@ -122,14 +124,15 @@ def format(level, message, timestamp, metadata, opts \\ [])
 
 ### `Logger.Backends.Logfmt.Encoder`
 
-Handles encoding of different Elixir types to logfmt key-value strings:
+Handles encoding of different Elixir types to logfmt key-value strings, dispatched by `encode/3` clause in this order:
 
-- Strings, atoms, numbers, booleans
-- Lists (including charlists)
-- Maps (with dot notation for nested keys)
-- Timestamps
-- PIDs
-- References
+1. Logger's raw timestamp tuple (`{{y, m, d}, {h, mi, s, ms}}`) and `DateTime`/`NaiveDateTime` - formatted per `:timestamp_format` / `:metadata_timestamp_format`
+2. Integers, floats, booleans, `nil`, atoms, binaries - encoded directly (atoms via `inspect/2`)
+3. Structs - `to_string/1` if they implement `String.Chars`, otherwise encoded as a map
+4. Maps - nested dot notation, `__struct__` stripped
+5. Anything else (tuples, PIDs, references, lists, functions, ...) - `to_string/1` if `String.Chars` is implemented *and* doesn't raise (e.g. a charlist), otherwise `inspect/2`
+
+All values are passed through `Logger.Backends.Logfmt.Quoter` before being written.
 
 ### `Logger.Backends.Logfmt.Quoter`
 

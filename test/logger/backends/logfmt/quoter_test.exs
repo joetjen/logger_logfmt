@@ -65,7 +65,7 @@ defmodule Logger.Backends.Logfmt.QuoterTest do
     test "quotes and escapes delete character" do
       result = Quoter.maybe_quote("test\x7Fdelete")
       output = IO.iodata_to_binary(result)
-      assert output =~ ~s("test)
+      assert output == ~s("test\\u007fdelete")
     end
 
     test "handles empty strings" do
@@ -150,6 +150,10 @@ defmodule Logger.Backends.Logfmt.QuoterTest do
           _ -> assert result =~ ~r/\\u[0-9a-f]{4}/
         end
       end
+    end
+
+    test "escapes the delete character" do
+      assert Quoter.escape("\x7F") == "\\u007f"
     end
 
     test "does not escape normal characters" do

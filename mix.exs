@@ -10,6 +10,7 @@ defmodule LoggerLogfmt.MixProject do
       version: @version,
       elixir: "~> 1.18",
       start_permanent: Mix.env() == :prod,
+      consolidate_protocols: Mix.env() != :test,
       deps: deps(),
 
       # Docs
@@ -42,7 +43,7 @@ defmodule LoggerLogfmt.MixProject do
   defp docs do
     [
       main: "readme",
-      extras: ["README.md", "QUICKSTART.md", "USAGE_GUIDE.md", "EXAMPLES.md"],
+      extras: ["README.md", "QUICKSTART.md", "USAGE_GUIDE.md", "EXAMPLES.md", "CONTRIBUTING.md", "LICENSE"],
       source_ref: "v#{@version}",
       source_url: @source_url,
       formatters: ["html"]
@@ -52,7 +53,7 @@ defmodule LoggerLogfmt.MixProject do
   defp package do
     [
       name: "logger_logfmt",
-      licenses: ["Apache-2.0"],
+      licenses: ["MIT"],
       links: %{
         "GitHub" => @source_url
       }

@@ -9,7 +9,7 @@ Add LoggerLogfmt to your dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:logger_logfmt, "~> 0.1.0"}
+    {:logger_logfmt, "~> 1.0"}
   ]
 end
 ```
