@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Publish docs for the `main` branch to GitHub Pages via `docs.yml` on every push, in
+  addition to the release docs on HexDocs. Referenced the GitHub Pages URL in `mix.exs`
+  (`package().links`) and the README, and set `docs().canonical` to the HexDocs URL so
+  search engines treat the released docs as authoritative.
+
 ## [2.0.0] - 2026-07-28
 
 ### Changed
