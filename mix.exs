@@ -3,6 +3,8 @@ defmodule LoggerLogfmt.MixProject do
 
   @version "2.0.0"
   @source_url "https://github.com/joetjen/logger_logfmt"
+  @pages_url "https://joetjen.github.io/logger_logfmt"
+  @hexdocs_url "https://hexdocs.pm/logger_logfmt"
 
   # `mix precommit` includes `test` as a step; without this, Mix runs
   # the whole alias chain (including `mix test`) in :dev, and `mix test`
@@ -74,7 +76,11 @@ defmodule LoggerLogfmt.MixProject do
       extras: ["README.md", "QUICKSTART.md", "USAGE_GUIDE.md", "EXAMPLES.md", "CONTRIBUTING.md", "LICENSE"],
       source_ref: @version,
       source_url: @source_url,
-      formatters: ["html"]
+      formatters: ["html"],
+      # Hexdocs is the docs for released versions; GitHub Pages (docs.yml)
+      # rebuilds from `main` on every push, so it can be ahead of the last
+      # release. Point crawlers at Hexdocs to avoid duplicate-content issues.
+      canonical: @hexdocs_url
     ]
   end
 
@@ -83,7 +89,8 @@ defmodule LoggerLogfmt.MixProject do
       name: "logger_logfmt",
       licenses: ["MIT"],
       links: %{
-        "GitHub" => @source_url
+        "GitHub" => @source_url,
+        "Docs (main)" => @pages_url
       }
     ]
   end
